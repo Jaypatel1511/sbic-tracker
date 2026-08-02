@@ -69,6 +69,14 @@ class SBICLicensee:
         SBA debentures / participating securities drawn in dollars.
     private_capital:
         LP / institutional capital committed in dollars.
+    data_source:
+        Provenance marker (0.2.0). ``"sample"`` for records produced by
+        ``load_sample_licensees()`` — invented companies with invented dollar
+        amounts, never SBA data. Defaults to ``"user"`` for records you
+        construct yourself, since the package cannot know where those came
+        from. There is no live-SBA value: sbic-tracker has no live loader (see
+        ``load_from_sba_url``). Check this before treating any figure derived
+        from these records as real.
     """
     license_number: str
     fund_name: str
@@ -79,6 +87,7 @@ class SBICLicensee:
     total_capital: float
     sba_leverage: float
     private_capital: float
+    data_source: str = "user"
 
     def __post_init__(self) -> None:
         if self.license_status not in LICENSE_STATUSES:
@@ -122,6 +131,13 @@ class Investment:
         Portion of cost basis written off (0 if not written off).
     instrument_type:
         'debt', 'equity', or 'mezzanine'.
+    data_source:
+        Provenance marker (0.2.0). ``"sample"`` for records produced by
+        ``load_sample_investments()`` — invented portfolio companies with
+        invented dates and dollar amounts. Defaults to ``"user"`` for records
+        you construct yourself. IRR / TVPI / DPI computed over a list of
+        ``"sample"`` records is arithmetic on fiction; check this marker before
+        reporting any such figure.
     """
     investee_company: str
     investment_date: date
@@ -132,6 +148,7 @@ class Investment:
     exit_proceeds: float = 0.0
     write_off_amount: float = 0.0
     instrument_type: Literal["debt", "equity", "mezzanine"] = "debt"
+    data_source: str = "user"
 
     def __post_init__(self) -> None:
         if self.instrument_type not in INVESTMENT_INSTRUMENTS:

@@ -3,6 +3,13 @@ sbic-tracker — SBIC Investment Portfolio Analyzer
 ==================================================
 Fund-level metrics (IRR, TVPI, DPI, RVPI), licensee tracking,
 vintage cohort analysis, and sector/state concentration.
+
+UNMAINTAINED (0.2.0). Live SBA data loading is NOT implemented and none is
+planned: ``load_from_sba_url()`` raises SBADownloadError. The package returns
+sample data only when explicitly requested via ``load_sample_licensees()`` /
+``load_sample_investments()``, whose records are stamped
+``data_source == "sample"``. The financial functions are real arithmetic and
+work on any data you supply; the data layer has no real source. See the README.
 """
 from sbictracker.data.schema import (
     INVESTMENT_INSTRUMENTS,
@@ -37,8 +44,9 @@ from sbictracker.analysis.sector import (
     state_breakdown,
     top_naics,
 )
+from sbictracker.exceptions import SBICTrackerError, SBADownloadError
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Jay Patel"
 
 __all__ = [
@@ -71,4 +79,7 @@ __all__ = [
     "sector_breakdown",
     "state_breakdown",
     "top_naics",
+    # Exceptions
+    "SBICTrackerError",
+    "SBADownloadError",
 ]

@@ -1,17 +1,32 @@
 """
 Sample data loaders for SBIC licensees and investments.
+
+sbic-tracker ships NO live data source. Everything in this module is invented
+demo data, and as of 0.2.0 it is reachable only when a caller asks for it by
+name — ``load_from_sba_url()`` raises instead of falling through to it, which is
+what it did silently through 0.1.0.
 """
 from __future__ import annotations
 
 from datetime import date
 from typing import List
 
+from sbictracker.exceptions import SBICTrackerError, SBADownloadError
 from sbictracker.data.schema import Investment, SBICLicensee
 
 
 def load_sample_licensees() -> List[SBICLicensee]:
-    """Return a representative set of 10 fictional SBIC licensees."""
-    return [
+    """Return a set of 10 FICTIONAL SBIC licensees — explicit opt-in demo data.
+
+    WARNING: these are invented fund names, managers, license numbers, dates and
+    dollar amounts. They are NOT SBA program data and no SBIC in this list
+    exists. Every record is stamped ``data_source == "sample"`` so downstream
+    code can tell a demo figure from a real one.
+
+    Legitimate for demos, examples and tests. Being the *silent fallback* from
+    ``load_from_sba_url()`` was the bug; that path is gone.
+    """
+    licensees = [
         SBICLicensee("04/73-0001", "Apex Growth Fund I", "Apex Capital",
                      date(2015, 3, 12), "active", "Standard",
                      150_000_000, 100_000_000, 50_000_000),
@@ -43,11 +58,19 @@ def load_sample_licensees() -> List[SBICLicensee]:
                      date(2021, 5, 9), "active", "Standard",
                      35_000_000, 23_000_000, 12_000_000),
     ]
+    for licensee in licensees:
+        licensee.data_source = "sample"
+    return licensees
 
 
 def load_sample_investments() -> List[Investment]:
-    """Return a representative portfolio of 20 fictional investments."""
-    return [
+    """Return a portfolio of 20 FICTIONAL investments — explicit opt-in demo data.
+
+    WARNING: invented portfolio companies with invented dates, NAICS codes and
+    dollar amounts. Fund-level IRR / TVPI / DPI computed over this list is
+    arithmetic on fiction. Every record is stamped ``data_source == "sample"``.
+    """
+    investments = [
         Investment("TechStart Inc.", date(2018, 3, 1), 5_000_000,
                    "541512", "CA", date(2022, 6, 1), 12_000_000, 0, "equity"),
         Investment("MediSol LLC", date(2019, 7, 15), 3_000_000,
@@ -89,19 +112,51 @@ def load_sample_investments() -> List[Investment]:
         Investment("Summit Staffing Co.", date(2018, 4, 16), 1_200_000,
                    "561320", "CO", date(2021, 11, 30), 960_000, 0, "debt"),
     ]
+    for investment in investments:
+        investment.data_source = "sample"
+    return investments
+
+
+# The CKAN resource_id below is a hand-typed sequential-hex placeholder, not a
+# real SBA dataset id. It 404s (verified 2026-07-30). It is retained ONLY so the
+# error message can name the endpoint that was configured; nothing requests it.
+_CONFIGURED_SBA_ENDPOINT = (
+    "https://data.sba.gov/api/3/action/datastore_search"
+    "?resource_id=d8e9a5a1-b2c3-4d5e-8f6a-7b8c9d0e1f2a&limit=50"
+)
 
 
 def load_from_sba_url() -> List[SBICLicensee]:
-    """Attempt to load live SBA SBIC data; fall back to sample data on failure."""
-    try:
-        import urllib.request
-        import json
-        url = "https://data.sba.gov/api/3/action/datastore_search?resource_id=d8e9a5a1-b2c3-4d5e-8f6a-7b8c9d0e1f2a&limit=50"
-        with urllib.request.urlopen(url, timeout=5) as resp:
-            data = json.loads(resp.read().decode())
-            records = data.get("result", {}).get("records", [])
-            if records:
-                return []  # would parse live records here
-    except Exception:
-        pass
-    return load_sample_licensees()
+    """Raise SBADownloadError: live SBA loading is not implemented in this package.
+
+    This function has never been able to return live data. Through 0.1.0 it
+    attempted the endpoint below, swallowed every failure with
+    ``except Exception: pass``, left the success branch unimplemented
+    (``return []  # would parse live records here``), and then returned
+    ``load_sample_licensees()`` — so every caller silently received invented
+    fund names, dates and dollar amounts labelled as SBA program data, and
+    computed IRR / TVPI / DPI on top of them.
+
+    0.2.0 raises instead. No request is attempted: the configured endpoint is
+    known-invalid, and the response parser does not exist, so there is nothing
+    a successful request could produce.
+
+    If you want the demo dataset, call ``load_sample_licensees()`` explicitly —
+    its records carry ``data_source == "sample"``.
+
+    Raises
+    ------
+    SBADownloadError
+        Always. sbic-tracker is not maintained; see the README.
+    """
+    raise SBADownloadError(
+        "Live SBA SBIC data loading is not implemented in sbic-tracker. "
+        f"The configured endpoint {_CONFIGURED_SBA_ENDPOINT} is invalid — its "
+        "CKAN resource_id is a placeholder that returns HTTP 404 — and no "
+        "response parser exists, so no request is attempted. This function "
+        "raises rather than silently returning load_sample_licensees(), which "
+        "is what it did through 0.1.0. Call load_sample_licensees() directly "
+        "if you want the demo dataset (records are stamped "
+        'data_source == "sample"). sbic-tracker is not currently maintained '
+        "and no live SBA source is planned; see the README."
+    )

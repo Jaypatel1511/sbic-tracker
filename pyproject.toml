@@ -4,13 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sbic-tracker"
-version = "0.1.0"
-description = "SBIC investment portfolio analyzer — fund-level IRR/TVPI/DPI, licensee tracking, and SBA program data analysis"
+version = "0.2.0"
+description = "UNMAINTAINED. SBIC investment portfolio analyzer — fund-level IRR/TVPI/DPI and licensee modeling. Live SBA data loading is NOT implemented; the package returns sample data only when explicitly requested. See README."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Jay Patel", email = "thejaypatel1511@gmail.com" }]
 requires-python = ">=3.9"
 dependencies = []
+classifiers = [
+    "Development Status :: 7 - Inactive",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
 
 [project.urls]
 Homepage = "https://github.com/Jaypatel1511/sbic-tracker"

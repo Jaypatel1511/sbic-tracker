@@ -4,9 +4,61 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Professional SBIC investment portfolio analyzer for Python.**
+**SBIC investment portfolio analyzer for Python.**
 
 Model and analyze Small Business Investment Company (SBIC) portfolios: fund-level IRR, TVPI, DPI, RVPI, vintage-year cohort analysis, peer benchmarking, and sector/state concentration — all built on pure Python with no external dependencies.
+
+---
+
+## ⚠️ Unmaintained — and it has no live data source
+
+**Read this before installing.**
+
+- **This package is not currently maintained.** No live SBA data source is
+  planned. It is published with the PyPI classifier
+  `Development Status :: 7 - Inactive`.
+- **Live SBA data loading is not implemented.** `load_from_sba_url()` raises
+  `SBADownloadError`. There is no SBA data in this package and never was.
+- **The package returns sample data only when you explicitly ask for it**, via
+  `load_sample_licensees()` / `load_sample_investments()`.
+
+### What 0.1.0 did
+
+`load_from_sba_url()` claimed in its own docstring to load live SBA data. It
+could not do so by any path: the CKAN `resource_id` in its URL was a hand-typed
+placeholder that returns 404, the request was wrapped in
+`except Exception: pass`, and the success branch was
+`return []  # would parse live records here`. Every caller silently received
+`load_sample_licensees()` — invented fund names, invented license dates,
+invented dollar amounts — labelled as SBA program data. Fund-level IRR, TVPI and
+DPI computed downstream were arithmetic on fiction.
+
+A fabricated *positive* is worse than a fabricated negative: an empty result is
+visibly unhelpful, whereas a fully populated portfolio of plausible fake
+companies reads as a successful data load.
+
+### What 0.2.0 does
+
+```python
+from sbictracker import load_from_sba_url, load_sample_licensees, SBADownloadError
+
+load_from_sba_url()          # raises SBADownloadError, always. No request is made.
+
+licensees = load_sample_licensees()          # demo data, explicitly
+licensees[0].data_source                     # "sample"
+```
+
+Every `SBICLicensee` and `Investment` now carries a `data_source` marker —
+`"sample"` for records from the demo loaders, `"user"` for records you construct
+yourself. **Check it before reporting any figure derived from these records.**
+
+### What still works
+
+All of the financial machinery. `irr`, `tvpi`, `dpi`, `rvpi`,
+`vintage_year_analysis`, `peer_quartile_ranking`, `sector_breakdown`,
+`SBICPortfolio` — these are real, tested arithmetic that operate on whatever
+`Investment` records you supply. If you have your own SBIC data, this package
+will analyze it correctly. What it will not do is fetch that data for you.
 
 ---
 
@@ -35,7 +87,9 @@ from sbictracker import (
     sector_breakdown, state_breakdown, top_naics,
 )
 
-# Load sample data (or plug in your own)
+# Load sample data (or plug in your own).
+# These are INVENTED companies with invented dollar amounts — every record is
+# stamped data_source == "sample". There is no live SBA loader; see above.
 licensees = load_sample_licensees()
 investments = load_sample_investments()
 
@@ -82,8 +136,9 @@ for code, name, invested in top:
 | **Peer quartile ranking** | Percentile and Q1–Q4 ranking vs a peer TVPI distribution |
 | **SBICPortfolio** | Add/remove investments; filter by sector, state, or instrument type |
 | **Sector/state breakdown** | NAICS 2-digit concentration with portfolio % weights |
-| **Sample data** | 10 licensees + 20 investments for immediate prototyping |
-| **SBA URL loader** | `load_from_sba_url()` attempts live SBA data with sample fallback |
+| **Sample data** | 10 licensees + 20 investments for prototyping — invented, stamped `data_source == "sample"` |
+| **Provenance markers** | Every record carries `data_source` (`"sample"` / `"user"`) |
+| **~~SBA URL loader~~** | **Not implemented.** `load_from_sba_url()` raises `SBADownloadError`; there is no live SBA source |
 
 ## Use Cases
 
@@ -99,13 +154,17 @@ for code, name, invested in top:
 
 ```python
 SBICLicensee(license_number, fund_name, fund_manager, license_date,
-             license_status, license_type, total_capital, sba_leverage, private_capital)
+             license_status, license_type, total_capital, sba_leverage,
+             private_capital, data_source="user")
   .leverage_ratio   # sba_leverage / private_capital
   .vintage_year
+  .data_source      # "sample" | "user" — provenance, check before reporting
 
 Investment(investee_company, investment_date, investment_amount, naics_code, state,
-           exit_date, exit_proceeds, write_off_amount, instrument_type)
+           exit_date, exit_proceeds, write_off_amount, instrument_type,
+           data_source="user")
   .is_realized       # bool
+  .data_source       # "sample" | "user"
   .realized_value    # exit_proceeds if realized, else 0
   .net_cost_basis    # amount - write_off_amount
   .moic              # exit_proceeds / amount (realized only)
