@@ -1,0 +1,12 @@
+# setuptools' default sdist rules match only tests/test*.py, which silently
+# omitted tests/conftest.py. The shipped suite then produced 26 passed / 57
+# errors — every test depending on a fixture failed at setup. Anyone auditing
+# sbic-tracker from PyPI saw a broken test suite for a release whose entire
+# claim is that it no longer reports invented numbers.
+recursive-include tests *.py
+
+include README.md
+include pyproject.toml
+include setup.py
+
+global-exclude *.pyc __pycache__/*

@@ -52,6 +52,23 @@ Every `SBICLicensee` and `Investment` now carries a `data_source` marker —
 `"sample"` for records from the demo loaders, `"user"` for records you construct
 yourself. **Check it before reporting any figure derived from these records.**
 
+### The example notebook was removed in 0.2.0
+
+`examples/sbic_portfolio_demo.ipynb` is deleted. It was written against an API
+this package never had — `LICENSE_TYPES.keys()` on a `list`,
+`SBICPortfolio.count()` / `.total_invested` / `.filter_state()` /
+`.filter_sector()` (the real names are `len()`, `summary_stats()`,
+`filter_by_state()`, `filter_by_sector()`), `irr(investments)` where `irr`
+takes a `List[float]`, and `vintage_year_analysis` / `sector_breakdown` /
+`state_breakdown` treated as returning DataFrames when they return `dict`.
+**8 of its 10 code cells raised.**
+
+It was deleted rather than repaired: this package is unmaintained, so a demo
+notebook is an artifact that rots with nobody tending it, and the Quickstart
+below covers every working feature. Every line of that Quickstart — including
+the `summary()` output block — is executed and verified against the shipped
+code before release.
+
 ### What still works
 
 All of the financial machinery. `irr`, `tvpi`, `dpi`, `rvpi`,
@@ -98,13 +115,16 @@ portfolio = SBICPortfolio("Apex Growth Fund I")
 portfolio.add_many(investments)
 print(portfolio.summary())
 # === Apex Growth Fund I ===
-#   Investments      : 20 (10 realized / 10 unrealized)
-#   Called capital   : $78,150,000
-#   Distributed      : $85,410,000
-#   NAV (unrealized) : $30,550,000
-#   TVPI             : 1.48x
-#   DPI              : 1.09x
-#   RVPI             : 0.39x
+#   Investments      : 20 (9 realized / 11 unrealized)
+#   Called capital   : $83,150,000
+#   Distributed      : $72,410,000
+#   NAV (unrealized) : $34,550,000
+#   TVPI             : 1.29x
+#   DPI              : 0.87x
+#   RVPI             : 0.42x
+# (Real output of the shipped sample data, executed 2026-08-02. Every figure
+#  above is arithmetic over INVENTED companies — correct arithmetic, fictional
+#  inputs. Do not quote these as SBIC program statistics.)
 
 # IRR from custom cash flows
 fund_flows = [-10_000_000, 0, 500_000, 2_000_000, 8_000_000, 5_000_000]
